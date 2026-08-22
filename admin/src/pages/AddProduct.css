@@ -1,0 +1,465 @@
+.add-product-page {
+    min-height: 100vh;
+    background: #f5f7fb;
+    padding: 40px 20px;
+}
+
+.add-product-container {
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+
+/* =========================
+   PAGE HEADER
+========================= */
+
+.page-header {
+    margin-bottom: 30px;
+}
+
+.page-header h1 {
+    margin: 0;
+    font-size: 30px;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+.page-header p {
+    margin-top: 8px;
+    margin-bottom: 0;
+    color: #6b7280;
+    font-size: 15px;
+}
+
+
+/* =========================
+   FORM
+========================= */
+
+.product-form {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+
+/* =========================
+   FORM SECTION
+========================= */
+
+.form-section {
+    padding: 28px 30px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.form-section h2 {
+    margin: 0 0 22px;
+    font-size: 18px;
+    font-weight: 600;
+    color: #111827;
+}
+
+
+/* =========================
+   FORM GRID
+========================= */
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 22px;
+}
+
+.full-width {
+    grid-column: 1 / -1;
+}
+
+
+/* =========================
+   FORM GROUP
+========================= */
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+}
+
+
+/* =========================
+   INPUTS
+========================= */
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    box-sizing: border-box;
+
+    padding: 12px 14px;
+
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+
+    background: #ffffff;
+
+    color: #111827;
+
+    font-size: 14px;
+
+    outline: none;
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.form-group input {
+    height: 46px;
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 120px;
+    font-family: inherit;
+}
+
+
+/* =========================
+   INPUT FOCUS
+========================= */
+
+.form-group input:focus,
+.form-group textarea:focus {
+    border-color: #2563eb;
+
+    box-shadow:
+        0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+
+/* =========================
+   PLACEHOLDER
+========================= */
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+    color: #9ca3af;
+}
+
+
+/* =========================
+   HELP TEXT
+========================= */
+
+.input-help {
+    margin-top: 7px;
+    font-size: 12px;
+    color: #6b7280;
+}
+
+
+/* =========================
+   STATUS
+========================= */
+
+.status-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    cursor: pointer;
+}
+
+.status-checkbox input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.checkbox-custom {
+    width: 20px;
+    height: 20px;
+
+    border: 2px solid #d1d5db;
+    border-radius: 5px;
+
+    position: relative;
+
+    flex-shrink: 0;
+
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease;
+}
+
+
+/* Checked */
+
+.status-checkbox input:checked + .checkbox-custom {
+    background: #2563eb;
+    border-color: #2563eb;
+}
+
+.status-checkbox input:checked + .checkbox-custom::after {
+    content: "";
+
+    position: absolute;
+
+    width: 5px;
+    height: 10px;
+
+    border-right: 2px solid white;
+    border-bottom: 2px solid white;
+
+    transform: rotate(45deg);
+
+    left: 6px;
+    top: 2px;
+}
+
+
+/* =========================
+   STATUS TEXT
+========================= */
+
+.status-text {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.status-text strong {
+    font-size: 14px;
+    color: #374151;
+}
+
+.status-text small {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+
+/* =========================
+   ACTIONS
+========================= */
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+
+    padding: 22px 30px;
+
+    background: #fafafa;
+}
+
+
+/* =========================
+   BUTTONS
+========================= */
+
+.form-actions button {
+    height: 44px;
+
+    padding: 0 20px;
+
+    border-radius: 8px;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease,
+        transform 0.1s ease;
+}
+
+
+/* Cancel */
+
+.cancel-button {
+    background: #ffffff;
+
+    border: 1px solid #d1d5db;
+
+    color: #374151;
+}
+
+.cancel-button:hover {
+    background: #f3f4f6;
+}
+
+
+/* Submit */
+
+.submit-button {
+    background: #2563eb;
+
+    border: 1px solid #2563eb;
+
+    color: #ffffff;
+}
+
+.submit-button:hover {
+    background: #1d4ed8;
+}
+
+.submit-button:active,
+.cancel-button:active {
+    transform: scale(0.98);
+}
+
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 700px) {
+
+    .add-product-page {
+        padding: 25px 15px;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .full-width {
+        grid-column: auto;
+    }
+
+    .form-section {
+        padding: 22px 20px;
+    }
+
+    .form-actions {
+        padding: 18px 20px;
+    }
+
+}
+
+
+@media (max-width: 450px) {
+
+    .page-header h1 {
+        font-size: 24px;
+    }
+
+    .form-actions {
+        flex-direction: column-reverse;
+    }
+
+    .form-actions button {
+        width: 100%;
+    }
+
+}
+
+/* =========================
+   IMAGE UPLOAD
+========================= */
+
+.image-upload {
+    width: 100%;
+}
+
+.upload-box {
+    min-height: 220px;
+
+    border: 2px dashed #d1d5db;
+    border-radius: 10px;
+
+    display: flex;
+    flex-direction: column;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 8px;
+
+    cursor: pointer;
+
+    background: #fafafa;
+
+    transition:
+        border-color 0.2s ease,
+        background 0.2s ease;
+}
+
+.upload-box:hover {
+    border-color: #2563eb;
+    background: #f8faff;
+}
+
+.upload-icon {
+    font-size: 38px;
+    margin-bottom: 5px;
+}
+
+.upload-box span {
+    font-size: 15px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.upload-box small {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+
+/* =========================
+   IMAGE PREVIEW
+========================= */
+
+.image-preview {
+    position: relative;
+
+    width: 100%;
+    max-width: 400px;
+
+    margin: 0 auto;
+}
+
+.image-preview img {
+    width: 100%;
+    height: 250px;
+
+    object-fit: cover;
+
+    border-radius: 10px;
+
+    border: 1px solid #e5e7eb;
+}
+
+.image-preview button {
+    margin-top: 12px;
+
+    padding: 9px 16px;
+
+    border: 1px solid #ef4444;
+    border-radius: 7px;
+
+    background: white;
+    color: #ef4444;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+.image-preview button:hover {
+    background: #fef2f2;
+}

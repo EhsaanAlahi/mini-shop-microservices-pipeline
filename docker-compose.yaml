@@ -1,0 +1,26 @@
+services:
+  admin:
+    env_file:
+      - path: ./admin/.env
+    build:
+      context: ./admin
+      dockerfile: Dockerfile
+      
+  mongodb:
+    image: mongo:8
+    container_name: minishop-mongodb
+
+    restart: unless-stopped
+
+    ports:
+      - "27017:27017"
+
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin123
+
+    volumes:
+      - mongodb_data:/data/db
+
+volumes:
+  mongodb_data:

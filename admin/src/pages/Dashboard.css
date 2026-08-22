@@ -1,0 +1,228 @@
+/* =========================
+   DASHBOARD
+========================= */
+
+.dashboard {
+    min-height: 100vh;
+    background: #f5f7fb;
+    color: #111827;
+}
+
+
+/* =========================
+   HEADER
+========================= */
+
+.dashboard-header {
+    min-height: 72px;
+
+    padding: 0 40px;
+
+    background: #ffffff;
+
+    border-bottom: 1px solid #e5e7eb;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    box-sizing: border-box;
+}
+
+
+/* Header title */
+
+.dashboard-header h1 {
+    margin: 0;
+
+    font-size: 24px;
+    font-weight: 700;
+
+    color: #111827;
+}
+
+
+/* Welcome text */
+
+.dashboard-header p {
+    margin: 5px 0 0;
+
+    font-size: 14px;
+
+    color: #6b7280;
+}
+
+
+/* =========================
+   LOGOUT BUTTON
+========================= */
+
+.dashboard-header button {
+    height: 40px;
+
+    padding: 0 18px;
+
+    border: 1px solid #e5e7eb;
+    border-radius: 7px;
+
+    background: #ffffff;
+
+    color: #374151;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease,
+        color 0.2s ease;
+}
+
+.dashboard-header button:hover {
+    background: #fef2f2;
+
+    border-color: #fecaca;
+
+    color: #dc2626;
+}
+
+
+/* =========================
+   CONTENT
+========================= */
+
+.dashboard-content {
+    max-width: 1200px;
+
+    margin: 0 auto;
+
+    padding: 40px;
+}
+
+
+/* =========================
+   CONTENT CARD
+========================= */
+
+.dashboard-content > div {
+    background: #ffffff;
+
+    border: 1px solid #e5e7eb;
+
+    border-radius: 12px;
+
+    padding: 30px;
+
+    box-sizing: border-box;
+}
+
+
+/* Content title */
+
+.dashboard-content h1 {
+    margin: 0 0 25px;
+
+    font-size: 22px;
+
+    font-weight: 600;
+
+    color: #111827;
+}
+
+
+/* =========================
+   ADD PRODUCT BUTTON
+========================= */
+
+.dashboard-content button {
+    height: 44px;
+
+    padding: 0 20px;
+
+    border: 1px solid #2563eb;
+
+    border-radius: 8px;
+
+    background: #2563eb;
+
+    color: #ffffff;
+
+    font-size: 14px;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease,
+        transform 0.1s ease;
+}
+
+.dashboard-content button:hover {
+    background: #1d4ed8;
+
+    border-color: #1d4ed8;
+}
+
+.dashboard-content button:active {
+    transform: scale(0.98);
+}
+
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 768px) {
+
+    .dashboard-header {
+        padding: 0 20px;
+    }
+
+    .dashboard-header h1 {
+        font-size: 20px;
+    }
+
+    .dashboard-content {
+        padding: 25px 20px;
+    }
+
+}
+
+
+@media (max-width: 500px) {
+
+    .dashboard-header {
+        min-height: 100px;
+
+        padding: 18px 20px;
+
+        align-items: flex-start;
+    }
+
+    .dashboard-header {
+        flex-direction: column;
+
+        gap: 15px;
+    }
+
+    .dashboard-header button {
+        width: 100%;
+    }
+
+    .dashboard-content {
+        padding: 20px 15px;
+    }
+
+    .dashboard-content > div {
+        padding: 22px;
+    }
+
+    .dashboard-content button {
+        width: 100%;
+    }
+
+}
