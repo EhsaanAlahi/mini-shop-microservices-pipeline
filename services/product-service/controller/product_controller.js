@@ -115,11 +115,9 @@ const getProducts = async (req, res) => {
 
     } catch (error) {
 
-        console.error(error);
-
         res.status(500).json({
             success: false,
-            message: "Failed to fetch products"
+            message: "Failed to fetch products" + error
         });
     }
 };
