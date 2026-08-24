@@ -1,0 +1,20 @@
+{
+  "name": "notification-service",
+  "version": "1.0.0",
+  "description": "Notification microservice for mini shop",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^16.6.1",
+    "express": "^4.22.2",
+    "kafkajs": "^2.2.4",
+    "mongoose": "^8.24.4"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}
