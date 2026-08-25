@@ -34,9 +34,6 @@ app.use(
     notificationRoutes
 );
 
-console.log("KAFKA BROKER:", process.env.KAFKA_BROKER);
-console.log("KAFKA CLIENT:", process.env.KAFKA_CLIENT_ID);
-console.log("KAFKA GROUP:", process.env.KAFKA_GROUP_ID);
 const PORT = process.env.PORT || 3003;
 
 
