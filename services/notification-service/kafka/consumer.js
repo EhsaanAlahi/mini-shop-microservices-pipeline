@@ -24,8 +24,18 @@ const kafka = new Kafka({
 
     brokers: [
         process.env.KAFKA_BROKER
-    ]
+    ],
+
+    retry: {
+        initialRetryTime: 1000,
+        retries: 10
+    }
 });
+
+
+// Kafka Admin
+
+const admin = kafka.admin();
 
 
 // Kafka Consumer
@@ -35,11 +45,115 @@ const consumer = kafka.consumer({
 });
 
 
+// Kafka Topic
+
+const TOPIC = "product-created";
+
+
+// Create Kafka Topic
+
+const createTopic = async () => {
+
+    try {
+
+        await admin.connect();
+
+        console.log(
+            "Kafka admin connected"
+        );
+
+
+        const topics = await admin.listTopics();
+
+
+        if (!topics.includes(TOPIC)) {
+
+            console.log(
+                `Kafka topic "${TOPIC}" does not exist. Creating topic...`
+            );
+
+
+            await admin.createTopics({
+
+                topics: [
+
+                    {
+                        topic: TOPIC,
+
+                        numPartitions: 3,
+
+                        replicationFactor: 1
+                    }
+
+                ],
+
+                waitForLeaders: true
+
+            });
+
+
+            console.log(
+                `Kafka topic "${TOPIC}" created successfully`
+            );
+
+        } else {
+
+            console.log(
+                `Kafka topic "${TOPIC}" already exists`
+            );
+
+        }
+
+
+        await admin.disconnect();
+
+        console.log(
+            "Kafka admin disconnected"
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Kafka topic creation error:",
+            error
+        );
+
+        try {
+
+            await admin.disconnect();
+
+        } catch (disconnectError) {
+
+            console.error(
+                "Kafka admin disconnect error:",
+                disconnectError
+            );
+
+        }
+
+        throw error;
+    }
+};
+
+
 // Start Consumer
 
 const startConsumer = async () => {
 
     try {
+
+        /*
+         * Step 1:
+         * Create Kafka topic after Kafka is available
+         */
+
+        await createTopic();
+
+
+        /*
+         * Step 2:
+         * Connect Kafka consumer
+         */
 
         await consumer.connect();
 
@@ -48,16 +162,29 @@ const startConsumer = async () => {
         );
 
 
+        /*
+         * Step 3:
+         * Subscribe to topic
+         */
+
         await consumer.subscribe({
-            topic: "product-created",
+
+            topic: TOPIC,
+
             fromBeginning: true
+
         });
 
 
         console.log(
-            "Subscribed to product-created topic"
+            `Subscribed to ${TOPIC} topic`
         );
 
+
+        /*
+         * Step 4:
+         * Start consuming messages
+         */
 
         await consumer.run({
 
@@ -68,6 +195,7 @@ const startConsumer = async () => {
                 try {
 
                     if (!message.value) {
+
                         console.log(
                             "Received empty Kafka message"
                         );
@@ -75,6 +203,11 @@ const startConsumer = async () => {
                         return;
                     }
 
+
+                    /*
+                     * Convert Kafka message
+                     * into JavaScript object
+                     */
 
                     const data = JSON.parse(
                         message.value.toString()
@@ -86,6 +219,11 @@ const startConsumer = async () => {
                         data
                     );
 
+
+                    /*
+                     * Create notification
+                     * in MongoDB
+                     */
 
                     const notification =
                         await Notification.create({
@@ -138,6 +276,50 @@ const startConsumer = async () => {
         process.exit(1);
     }
 };
+
+
+// Graceful shutdown
+
+const shutdown = async () => {
+
+    try {
+
+        console.log(
+            "Shutting down Kafka consumer..."
+        );
+
+
+        await consumer.disconnect();
+
+
+        console.log(
+            "Kafka consumer disconnected"
+        );
+
+
+        process.exit(0);
+
+    } catch (error) {
+
+        console.error(
+            "Kafka shutdown error:",
+            error
+        );
+
+        process.exit(1);
+    }
+};
+
+
+process.on(
+    "SIGINT",
+    shutdown
+);
+
+process.on(
+    "SIGTERM",
+    shutdown
+);
 
 
 module.exports = startConsumer;
