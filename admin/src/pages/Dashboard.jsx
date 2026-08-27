@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
+import { toast } from "react-toastify";
 import {
   fetchProducts,
   editProduct,
@@ -18,6 +19,7 @@ function Dashboard() {
 
   // track which product id is currently being deleted/updated (for button spinners)
   const [actionId, setActionId] = useState(null);
+  const [search, setSearch] = useState("");
 
   const user = JSON.parse(localStorage.getItem("user") || "null");
 
@@ -31,7 +33,16 @@ function Dashboard() {
     navigate("/login");
   };
 
-  // ---- Derived stats ----
+  // session expire hone par sab clear karke login pe bhej dein
+  const handleSessionExpired = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("isAuthenticated");
+    localStorage.removeItem("user");
+    toast.error("Your session has expired.");
+    navigate("/login");
+  };
+
+  // ---- Derived stats (hamesha SAARE products par, filter se independent) ----
   const stats = useMemo(() => {
     const totalProducts = products.length;
     const totalStock = products.reduce(
@@ -49,7 +60,19 @@ function Dashboard() {
     };
   }, [products]);
 
-  const recentProducts = useMemo(() => products.slice(0, 8), [products]);
+  // ---- Search + recent list ----
+  const visibleProducts = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    const filtered = term
+      ? products.filter(
+          (p) =>
+            p.name?.toLowerCase().includes(term) ||
+            p.category?.toLowerCase().includes(term)
+        )
+      : products;
+
+    return filtered.slice(0, 8);
+  }, [products, search]);
 
   // ---- Actions ----
   const handleEdit = (id) => {
@@ -63,14 +86,25 @@ function Dashboard() {
     );
     if (newStock === null) return; // cancelled
     if (isNaN(newStock) || Number(newStock) < 0) {
-      alert("Sahi number likhein.");
+      toast.error("Sahi number likhein.");
       return;
     }
+
     setActionId(product._id);
-    await dispatch(
-      editProduct({ id: product._id, updates: { stock: Number(newStock) } })
-    );
-    setActionId(null);
+    try {
+      await dispatch(
+        editProduct({ id: product._id, updates: { stock: Number(newStock) } })
+      ).unwrap();
+      toast.success(`"${product.name}" ka stock update ho gaya.`);
+    } catch (err) {
+      if (err?.status === 401 || err?.status === 403) {
+        handleSessionExpired();
+        return;
+      }
+      toast.error(err?.message || "Stock update fail ho gaya.");
+    } finally {
+      setActionId(null);
+    }
   };
 
   const handleDelete = async (product) => {
@@ -78,9 +112,20 @@ function Dashboard() {
       `"${product.name}" ko delete karna hai? Ye action wapis nahi ho sakta.`
     );
     if (!confirmed) return;
+
     setActionId(product._id);
-    await dispatch(removeProduct(product._id));
-    setActionId(null);
+    try {
+      await dispatch(removeProduct(product._id)).unwrap();
+      toast.success(`"${product.name}" delete ho gaya.`);
+    } catch (err) {
+      if (err?.status === 401 || err?.status === 403) {
+        handleSessionExpired();
+        return;
+      }
+      toast.error(err?.message || "Delete fail ho gaya.");
+    } finally {
+      setActionId(null);
+    }
   };
 
   return (
@@ -145,6 +190,13 @@ function Dashboard() {
       <section className="recent-section">
         <div className="section-header">
           <h2>Recent Products</h2>
+          <input
+            type="text"
+            className="search-input"
+            placeholder="Search by name or category…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
           <button className="link-btn" onClick={() => navigate("/products")}>
             View all →
           </button>
@@ -160,20 +212,26 @@ function Dashboard() {
               </div>
             ))}
           </div>
-        ) : recentProducts.length === 0 ? (
+        ) : visibleProducts.length === 0 ? (
           <div className="empty-state">
-            <p>Abhi tak koi product add nahi hua.</p>
-            <button className="btn btn-primary" onClick={() => navigate("/add-product")}>
-              First product add karein
-            </button>
+            {products.length === 0 ? (
+              <>
+                <p>Abhi tak koi product add nahi hua.</p>
+                <button className="btn btn-primary" onClick={() => navigate("/add-product")}>
+                  First product add karein
+                </button>
+              </>
+            ) : (
+              <p>"{search}" se match karta koi product nahi mila.</p>
+            )}
           </div>
         ) : (
           <div className="card-grid">
-            {recentProducts.map((p) => (
+            {visibleProducts.map((p) => (
               <div className="product-card" key={p._id}>
                 <div className="product-card-image">
                   {p.imageUrl ? (
-                    <img src={p.imageUrl} alt={p.name} />
+                    <img src={p.imageUrl} alt={p.name} loading="lazy" />
                   ) : (
                     <div className="product-thumb placeholder large">
                       {p.name?.charAt(0)?.toUpperCase() || "P"}
@@ -186,6 +244,9 @@ function Dashboard() {
                   >
                     Stock: {p.stock}
                   </span>
+                  {p.isActive === false && (
+                    <span className="inactive-badge">Inactive</span>
+                  )}
                 </div>
 
                 <div className="product-card-body">
@@ -214,7 +275,7 @@ function Dashboard() {
                     disabled={actionId === p._id}
                     onClick={() => handleDelete(p)}
                   >
-                    🗑️ Delete
+                    {actionId === p._id ? "…" : "🗑️ Delete"}
                   </button>
                 </div>
               </div>
