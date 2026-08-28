@@ -1,11 +1,14 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
+import { addProduct } from "../features/products/productSlice";
 import "./AddProduct.css";
 
 function AddProduct() {
 
     const navigate = useNavigate();
+    const dispatch = useDispatch();
 
     const [formData, setFormData] = useState({
         name: "",
@@ -203,137 +206,23 @@ function AddProduct() {
 
             const data = new FormData();
 
-
-            data.append(
-                "name",
-                formData.name.trim()
-            );
-
-
-            data.append(
-                "description",
-                formData.description.trim()
-            );
-
-
-            data.append(
-                "price",
-                formData.price
-            );
-
-
-            data.append(
-                "category",
-                formData.category.trim()
-            );
-
-
-            data.append(
-                "stock",
-                formData.stock
-            );
-
-
-            data.append(
-                "isActive",
-                String(formData.isActive)
-            );
-
-
-            // Image
+            data.append("name", formData.name.trim());
+            data.append("description", formData.description.trim());
+            data.append("price", formData.price);
+            data.append("category", formData.category.trim());
+            data.append("stock", formData.stock);
+            data.append("isActive", String(formData.isActive));
 
             if (formData.image) {
-
-                data.append(
-                    "image",
-                    formData.image
-                );
+                data.append("image", formData.image);
             }
 
 
             // =========================
-            // JWT
+            // REDUX THUNK (token axios interceptor mein automatically lag jata hai)
             // =========================
 
-            const token =
-                localStorage.getItem("token");
-
-
-            if (!token) {
-
-                toast.error(
-                    "You are not authenticated."
-                );
-
-                navigate("/login");
-
-                return;
-            }
-
-
-            // =========================
-            // API REQUEST
-            // =========================
-
-            const response = await fetch(
-                `${process.env.REACT_APP_API_URL_PRODUCT}signup`,
-                {
-                    method: "POST",
-
-                    headers: {
-                        Authorization:
-                            `Bearer ${token}`,
-                    },
-
-                    body: data,
-                }
-            );
-
-
-            const result =
-                await response.json();
-
-
-            // =========================
-            // API ERROR
-            // =========================
-
-            if (!response.ok) {
-
-                if (
-                    response.status === 401 ||
-                    response.status === 403
-                ) {
-
-                    localStorage.removeItem(
-                        "token"
-                    );
-
-                    localStorage.removeItem(
-                        "isAuthenticated"
-                    );
-
-                    localStorage.removeItem(
-                        "user"
-                    );
-
-
-                    toast.error(
-                        "Your session has expired."
-                    );
-
-
-                    navigate("/login");
-
-                    return;
-                }
-
-
-                throw new Error(
-                    result.message ||
-                    "Failed to create product"
-                );
-            }
+            const product = await dispatch(addProduct(data)).unwrap();
 
 
             // =========================
@@ -344,11 +233,7 @@ function AddProduct() {
                 "Product added successfully!"
             );
 
-
-            console.log(
-                "Created product:",
-                result.product
-            );
+            console.log("Created product:", product);
 
 
             // Reset form
@@ -381,9 +266,22 @@ function AddProduct() {
                 error
             );
 
+            // Session expire ho gayi ho to logout kar dein
+            if (error?.status === 401 || error?.status === 403) {
+
+                localStorage.removeItem("token");
+                localStorage.removeItem("isAuthenticated");
+                localStorage.removeItem("user");
+
+                toast.error("Your session has expired.");
+
+                navigate("/login");
+
+                return;
+            }
 
             toast.error(
-                error.message ||
+                error?.message ||
                 "Something went wrong."
             );
 
