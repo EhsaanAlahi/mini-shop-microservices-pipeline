@@ -33,7 +33,7 @@ jobs:
           cache-dependency-path: services/notification-service/package.json
 
       - name: Install dependencies
-        run: npm nstall
+        run: npm install
        
     
       - name: SonarQube Scan
