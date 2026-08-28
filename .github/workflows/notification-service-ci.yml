@@ -1,0 +1,50 @@
+name: Notification Service CI
+
+on:
+  push:
+    paths:
+      - 'services/notification-service/**'
+      - 'sonar-project.properties'
+
+  pull_request:
+    paths:
+      - 'services/notification-service/**'
+      - 'sonar-project.properties'
+
+jobs:
+  notification-ci:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: services/notification-service
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: services/notification-service/package.json
+
+      - name: Install dependencies
+        run: npm nstall
+       
+    
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@7006c4492b2e0ee0f816d36501671557c97f5995 # v8.1.0
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      
+
+      - name: SonarQube Quality Gate
+        uses: SonarSource/sonarqube-quality-gate-action@master
+        timeout-minutes: 5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
