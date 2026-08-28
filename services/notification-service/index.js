@@ -45,10 +45,6 @@ const startServer = async () => {
             process.env.MONGO_URI
         );
 
-        console.log(
-            "Notification MongoDB connected"
-        );
-
 
         await startConsumer();
 
