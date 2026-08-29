@@ -15,6 +15,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { fetchProducts } from "../features/products/productSlice";
+import { addToCart, toggleCart, selectCartCount } from "../features/cart/cartSlice";
+import CartDrawer from "./CartDrawer";
 import "./ShowProducts.css";
 
 // If your backend serves uploaded images from a different path/port,
@@ -48,11 +50,16 @@ export default function ShowProducts() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { items, loading, error } = useSelector((state) => state.products);
+  const cartCount = useSelector(selectCartCount);
   const [query, setQuery] = useState("");
 
   useEffect(() => {
     dispatch(fetchProducts());
   }, [dispatch]);
+
+  const handleAddToCart = (product) => {
+    dispatch(addToCart(product));
+  };
 
   const filtered = useMemo(() => {
     const list = items || [];
@@ -101,13 +108,35 @@ export default function ShowProducts() {
             />
           </div>
 
-          <button
-            type="button"
-            className="admin-login-btn"
-            onClick={() => navigate("/login")}
-          >
-            Admin Login
-          </button>
+          <div className="shop-header__actions">
+            <button
+              type="button"
+              className="cart-icon-btn"
+              onClick={() => dispatch(toggleCart())}
+              aria-label="Open cart"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path
+                  d="M3 3h2l2.4 12.2a2 2 0 0 0 2 1.6h8.2a2 2 0 0 0 2-1.6L21 8H6"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <circle cx="9.5" cy="20.5" r="1.5" fill="currentColor" />
+                <circle cx="17.5" cy="20.5" r="1.5" fill="currentColor" />
+              </svg>
+              {cartCount > 0 && <span className="cart-icon-btn__badge">{cartCount}</span>}
+            </button>
+
+            <button
+              type="button"
+              className="admin-login-btn"
+              onClick={() => navigate("/login")}
+            >
+              Admin Login
+            </button>
+          </div>
         </div>
       </header>
 
@@ -185,6 +214,14 @@ export default function ShowProducts() {
                     {stock !== null && !outOfStock && (
                       <p className="product-card__stock">{stock} in stock</p>
                     )}
+                    <button
+                      type="button"
+                      className="product-card__add-btn"
+                      disabled={outOfStock}
+                      onClick={() => handleAddToCart(p)}
+                    >
+                      {outOfStock ? "Out of stock" : "Add to Cart"}
+                    </button>
                   </div>
                 </article>
               );
@@ -196,6 +233,8 @@ export default function ShowProducts() {
       <footer className="shop-footer">
         <p>Mini Shop — a small catalog, carefully kept.</p>
       </footer>
+
+      <CartDrawer />
     </div>
   );
 }
