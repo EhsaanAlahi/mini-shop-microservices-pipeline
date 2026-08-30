@@ -1,4 +1,4 @@
-name:  Build Notification Service Image and Push to the Docker Hub
+name: Build and Push MiniShop Images to Docker Hub
 
 on:
   push:
@@ -12,29 +12,36 @@ jobs:
 
     strategy:
       fail-fast: true
+
       matrix:
         service:
           - name: admin-panel
             context: ./admin
             image: minishop_admin
+            frontend: true
 
           - name: user
             context: ./user
             image: minishop_user
+            frontend: true
 
           - name: user-service
             context: ./services/user-service
             image: minishop_user_service
+            frontend: false
 
           - name: product-service
             context: ./services/product-service
             image: minishop_product_service
+            frontend: false
 
           - name: notification-service
             context: ./services/notification-service
             image: minishop_notification_service
+            frontend: false
 
     steps:
+
       # Checkout repository
       - name: Checkout code
         uses: actions/checkout@v4
@@ -56,12 +63,14 @@ jobs:
         with:
           context: ${{ matrix.service.context }}
           push: true
+
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.service.image }}:${{ github.ref_name }}
             ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.service.image }}:latest
 
-          # Build arguments for Admin frontend
           build-args: |
-            REACT_APP_API_URL=${{ secrets.REACT_APP_API_URL }}
-            REACT_APP_API_URL_PRODUCT=${{ secrets.REACT_APP_API_URL_PRODUCT }}
-```
+            REACT_APP_API_URL=${{ matrix.service.frontend && secrets.REACT_APP_API_URL || '' }}
+            REACT_APP_API_URL_PRODUCT=${{ matrix.service.frontend && secrets.REACT_APP_API_URL_PRODUCT || '' }}
+
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
