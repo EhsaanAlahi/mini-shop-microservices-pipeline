@@ -3,18 +3,23 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/login";
 import Dashboard from "./pages/Dashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
-import AddProduct from './pages/AddProduct'
+import AddProduct from "./pages/AddProduct";
+import EditProduct from "./pages/EditProduct";
+import ShowProducts from "./pages/ShowProducts";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-function App() {
 
+function App() {
   return (
     <>
       <Routes>
+        {/* Public storefront — this is the front page now */}
+        <Route path="/" element={<ShowProducts />} />
+
         {/* Public Route */}
         <Route path="/login" element={<Login />} />
 
-        {/* Protected Route */}
+        {/* Protected Routes */}
         <Route
           path="/dashboard"
           element={
@@ -24,21 +29,24 @@ function App() {
           }
         />
         <Route
-          path="/products/add"
+          path="/add-product"
           element={
             <ProtectedRoute>
               <AddProduct />
             </ProtectedRoute>
           }
         />
-        {/* Default Route */}
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-
-        {/* 404 */}
         <Route
-          path="*"
-          element={<Navigate to="/dashboard" replace />}
+          path="/edit-product/:id"
+          element={
+            <ProtectedRoute>
+              <EditProduct />
+            </ProtectedRoute>
+          }
         />
+
+        {/* 404 -> back to the storefront */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <ToastContainer
         position="top-right"

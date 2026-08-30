@@ -1,192 +1,300 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { toast } from "react-toastify";
+import {
+  fetchProducts,
+  editProduct,
+  removeProduct,
+} from "../features/products/productSlice";
 import "./Dashboard.css";
 
 function Dashboard() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const { items: products, loading, error } = useSelector(
+    (state) => state.products
+  );
+
+  // track which product id is currently being deleted/updated (for button spinners)
+  const [actionId, setActionId] = useState(null);
+  const [search, setSearch] = useState("");
 
   const user = JSON.parse(localStorage.getItem("user") || "null");
+
+  useEffect(() => {
+    dispatch(fetchProducts());
+  }, [dispatch]);
 
   const handleLogout = () => {
     localStorage.removeItem("isAuthenticated");
     localStorage.removeItem("user");
-
     navigate("/login");
   };
 
-  const handleAddProduct = () => {
-    navigate("/products/add");
+  // session expire hone par sab clear karke login pe bhej dein
+  const handleSessionExpired = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("isAuthenticated");
+    localStorage.removeItem("user");
+    toast.error("Your session has expired.");
+    navigate("/login");
   };
 
-  // Fetch products
-  const fetchProducts = async () => {
+  // ---- Derived stats (hamesha SAARE products par, filter se independent) ----
+  const stats = useMemo(() => {
+    const totalProducts = products.length;
+    const totalStock = products.reduce(
+      (sum, p) => sum + (Number(p.stock) || 0),
+      0
+    );
+    const categories = new Set(products.map((p) => p.category).filter(Boolean));
+    const lowStock = products.filter((p) => Number(p.stock) <= 5).length;
+
+    return {
+      totalProducts,
+      totalStock,
+      totalCategories: categories.size,
+      lowStock,
+    };
+  }, [products]);
+
+  // ---- Search + recent list ----
+  const visibleProducts = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    const filtered = term
+      ? products.filter(
+          (p) =>
+            p.name?.toLowerCase().includes(term) ||
+            p.category?.toLowerCase().includes(term)
+        )
+      : products;
+
+    return filtered.slice(0, 8);
+  }, [products, search]);
+
+  // ---- Actions ----
+  const handleEdit = (id) => {
+    navigate(`/edit-product/${id}`);
+  };
+
+  const handleQuickUpdate = async (product) => {
+    const newStock = window.prompt(
+      `"${product.name}" ka naya stock enter karein:`,
+      product.stock
+    );
+    if (newStock === null) return; // cancelled
+    if (isNaN(newStock) || Number(newStock) < 0) {
+      toast.error("Sahi number likhein.");
+      return;
+    }
+
+    setActionId(product._id);
     try {
-      setLoading(true);
-      setError("");
-
-      const response = await fetch(`${process.env.REACT_APP_API_URL_PRODUCT}`);
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch products");
+      await dispatch(
+        editProduct({ id: product._id, updates: { stock: Number(newStock) } })
+      ).unwrap();
+      toast.success(`"${product.name}" ka stock update ho gaya.`);
+    } catch (err) {
+      if (err?.status === 401 || err?.status === 403) {
+        handleSessionExpired();
+        return;
       }
-
-      const data = await response.json();
-
-      setProducts(data.products || []);
-    } catch (error) {
-      console.error("Fetch products error:", error);
-
-      setError("Unable to load products. Please try again.");
+      toast.error(err?.message || "Stock update fail ho gaya.");
     } finally {
-      setLoading(false);
+      setActionId(null);
     }
   };
 
-  useEffect(() => {
-    fetchProducts();
-  }, []);
+  const handleDelete = async (product) => {
+    const confirmed = window.confirm(
+      `"${product.name}" ko delete karna hai? Ye action wapis nahi ho sakta.`
+    );
+    if (!confirmed) return;
+
+    setActionId(product._id);
+    try {
+      await dispatch(removeProduct(product._id)).unwrap();
+      toast.success(`"${product.name}" delete ho gaya.`);
+    } catch (err) {
+      if (err?.status === 401 || err?.status === 403) {
+        handleSessionExpired();
+        return;
+      }
+      toast.error(err?.message || "Delete fail ho gaya.");
+    } finally {
+      setActionId(null);
+    }
+  };
 
   return (
     <div className="dashboard">
-      {/* Header */}
+      {/* Top bar */}
       <header className="dashboard-header">
-        <div className="dashboard-header-info">
+        <div>
           <h1>Admin Dashboard</h1>
-
-          <p>Welcome back, {user?.name || "Admin"}</p>
+          <p className="welcome-text">
+            Welcome back{user?.name ? `, ${user.name}` : ""} 👋
+          </p>
         </div>
-
-        <button className="logout-button" onClick={handleLogout}>
-          Logout
-        </button>
-      </header>
-
-      
-        {/* Products Header */}
-        <div className="dashboard-card-header">
-          <div>
-            <h2>Products</h2>
-            <p>Manage your store products</p>
-          </div>
-
-          <button className="add-product-button" onClick={handleAddProduct}>
+        <div className="header-actions">
+          <button className="btn btn-primary" onClick={() => navigate("/add-product")}>
             + Add Product
           </button>
+          <button className="btn btn-outline" onClick={handleLogout}>
+            Logout
+          </button>
         </div>
-      {/* </div> */}
-      {/* Main Content */}
-      <main className="dashboard-content">
-        <div className="dashboard-card">
-          {/* Loading */}
-          {loading && (
-            <div className="products-message">
-              <p>Loading products...</p>
-            </div>
-          )}
+      </header>
 
-          {/* Error */}
-          {!loading && error && (
-            <div className="products-message error-message">
-              <p>{error}</p>
+      {error && <div className="alert alert-error">{error}</div>}
 
-              <button onClick={fetchProducts} className="retry-button">
-                Try Again
-              </button>
-            </div>
-          )}
+      {/* Stats grid */}
+      <section className="stats-grid">
+        <StatCard
+          label="Total Products"
+          value={loading ? "…" : stats.totalProducts}
+          icon="📦"
+          color="blue"
+        />
+        <StatCard
+          label="Total Stock"
+          value={loading ? "…" : stats.totalStock}
+          icon="🧮"
+          color="green"
+        />
+        <StatCard
+          label="Categories"
+          value={loading ? "…" : stats.totalCategories}
+          icon="🏷️"
+          color="purple"
+        />
+        <StatCard
+          label="Low Stock Alerts"
+          value={loading ? "…" : stats.lowStock}
+          icon="⚠️"
+          color="orange"
+        />
+        <StatCard
+          label="Orders"
+          value="Soon"
+          icon="🛒"
+          color="gray"
+          comingSoon
+          tooltip="Order-service ready hote hi yahan live orders dikhengay"
+        />
+      </section>
 
-          {/* Empty */}
-          {!loading && !error && products.length === 0 && (
-            <div className="products-message">
-              <p>No products found.</p>
+      {/* Recent products */}
+      <section className="recent-section">
+        <div className="section-header">
+          <h2>Recent Products</h2>
+          <input
+            type="text"
+            className="search-input"
+            placeholder="Search by name or category…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <button className="link-btn" onClick={() => navigate("/products")}>
+            View all →
+          </button>
+        </div>
 
-              <button className="add-product-button" onClick={handleAddProduct}>
-                + Add Your First Product
-              </button>
-            </div>
-          )}
-
-          {/* Products */}
-          {!loading && !error && products.length > 0 && (
-            <div className="products-grid">
-              {products.map((product) => (
-                <div className="product-card" key={product._id}>
-                  {/* Image */}
-                  <div className="product-image-container">
-                    <img
-                      src={product.imageUrl}
-                      alt={product.name}
-                      className="product-image"
-                    />
-                  </div>
-
-                  {/* Product Info */}
-                  <div className="product-info">
-                    <div className="product-title-row">
-                      <h3>{product.name}</h3>
-
-                      <span
-                        className={
-                          product.isActive ? "status active" : "status inactive"
-                        }
-                      >
-                        {product.isActive ? "Active" : "Inactive"}
-                      </span>
+        {loading ? (
+          <div className="card-grid">
+            {[...Array(4)].map((_, i) => (
+              <div className="product-card skeleton-card" key={i}>
+                <div className="skeleton-thumb" />
+                <div className="skeleton-line" style={{ width: "70%" }} />
+                <div className="skeleton-line" style={{ width: "40%" }} />
+              </div>
+            ))}
+          </div>
+        ) : visibleProducts.length === 0 ? (
+          <div className="empty-state">
+            {products.length === 0 ? (
+              <>
+                <p>Abhi tak koi product add nahi hua.</p>
+                <button className="btn btn-primary" onClick={() => navigate("/add-product")}>
+                  First product add karein
+                </button>
+              </>
+            ) : (
+              <p>"{search}" se match karta koi product nahi mila.</p>
+            )}
+          </div>
+        ) : (
+          <div className="card-grid">
+            {visibleProducts.map((p) => (
+              <div className="product-card" key={p._id}>
+                <div className="product-card-image">
+                  {p.imageUrl ? (
+                    <img src={p.imageUrl} alt={p.name} loading="lazy" />
+                  ) : (
+                    <div className="product-thumb placeholder large">
+                      {p.name?.charAt(0)?.toUpperCase() || "P"}
                     </div>
-
-                    <p className="product-description">
-                      {product.description || "No description available."}
-                    </p>
-
-                    <div className="product-details">
-                      <div>
-                        <span>Category</span>
-
-                        <strong>{product.category || "Uncategorized"}</strong>
-                      </div>
-
-                      <div>
-                        <span>Stock</span>
-
-                        <strong>{product.stock}</strong>
-                      </div>
-
-                      <div>
-                        <span>Price</span>
-
-                        <strong>${Number(product.price).toFixed(2)}</strong>
-                      </div>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="product-actions">
-                      <button
-                        className="edit-product-button"
-                        onClick={() =>
-                          navigate(`/products/edit/${product._id}`)
-                        }
-                      >
-                        Edit
-                      </button>
-
-                      <button
-                        className="view-product-button"
-                        onClick={() => navigate(`/products/${product._id}`)}
-                      >
-                        View
-                      </button>
-                    </div>
-                  </div>
+                  )}
+                  <span
+                    className={`stock-badge floating ${
+                      Number(p.stock) <= 5 ? "low" : "ok"
+                    }`}
+                  >
+                    Stock: {p.stock}
+                  </span>
+                  {p.isActive === false && (
+                    <span className="inactive-badge">Inactive</span>
+                  )}
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </main>
+
+                <div className="product-card-body">
+                  <h4 title={p.name}>{p.name}</h4>
+                  <p className="muted">{p.category || "Uncategorized"}</p>
+                  <p className="price">Rs {p.price}</p>
+                </div>
+
+                <div className="action-buttons full">
+                  <button
+                    className="btn-icon btn-edit"
+                    disabled={actionId === p._id}
+                    onClick={() => handleEdit(p._id)}
+                  >
+                    ✏️ Edit
+                  </button>
+                  <button
+                    className="btn-icon btn-update"
+                    disabled={actionId === p._id}
+                    onClick={() => handleQuickUpdate(p)}
+                  >
+                    {actionId === p._id ? "…" : "🔄 Update"}
+                  </button>
+                  <button
+                    className="btn-icon btn-delete"
+                    disabled={actionId === p._id}
+                    onClick={() => handleDelete(p)}
+                  >
+                    {actionId === p._id ? "…" : "🗑️ Delete"}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}
+
+function StatCard({ label, value, icon, color, comingSoon, tooltip }) {
+  return (
+    <div className={`stat-card stat-${color} ${comingSoon ? "coming-soon" : ""}`} title={tooltip}>
+      <div className="stat-icon">{icon}</div>
+      <div>
+        <p className="stat-label">{label}</p>
+        <h3 className="stat-value">{value}</h3>
+      </div>
     </div>
   );
 }
