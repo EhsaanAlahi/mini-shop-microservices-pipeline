@@ -23,7 +23,7 @@ jobs:
           - name: user
             context: ./user
             image: minishop_user
-            frontend: true
+            frontend: false
 
           - name: user-service
             context: ./services/user-service
