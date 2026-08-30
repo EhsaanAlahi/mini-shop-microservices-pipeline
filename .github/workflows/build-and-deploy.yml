@@ -25,6 +25,7 @@ jobs:
             image: minishop_user
             frontend: false
 
+
           - name: user-service
             context: ./services/user-service
             image: minishop_user_service
@@ -66,7 +67,6 @@ jobs:
 
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.service.image }}:${{ github.ref_name }}
-            ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.service.image }}:latest
 
           build-args: |
             REACT_APP_API_URL=${{ matrix.service.frontend && secrets.REACT_APP_API_URL || '' }}
