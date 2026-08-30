@@ -69,8 +69,8 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.service.image }}:${{ github.ref_name }}
 
           build-args: |
-            REACT_APP_API_URL=${{ matrix.service.frontend && secrets.REACT_APP_API_URL || '' }}
-            REACT_APP_API_URL_PRODUCT=${{ matrix.service.frontend && secrets.REACT_APP_API_URL_PRODUCT || '' }}
+            REACT_APP_API_URL=${{ matrix.service.frontend && vars.REACT_APP_API_URL || '' }}
+            REACT_APP_API_URL_PRODUCT=${{ matrix.service.frontend && vars.REACT_APP_API_URL_PRODUCT || '' }}
 
           cache-from: type=gha
           cache-to: type=gha,mode=max
