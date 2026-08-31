@@ -5,7 +5,7 @@ import Dashboard from "./pages/Dashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AddProduct from "./pages/AddProduct";
 import EditProduct from "./pages/EditProduct";
-import ShowProducts from "./pages/ShowProducts";
+// import ShowProducts from "./pages/ShowProducts";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -13,11 +13,9 @@ function App() {
   return (
     <>
       <Routes>
-        {/* Public storefront — this is the front page now */}
-        <Route path="/" element={<ShowProducts />} />
 
         {/* Public Route */}
-        <Route path="/login" element={<Login />} />
+        <Route path="/" element={<Login />} />
 
         {/* Protected Routes */}
         <Route

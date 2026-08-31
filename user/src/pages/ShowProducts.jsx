@@ -1,23 +1,16 @@
 // src/pages/ShowProducts.jsx
-//
-// Public storefront page. Shows every product from the catalog (fetched via
-// the existing productSlice/fetchProducts thunk) in an e-commerce style grid.
-// Meant to live at the "/" route so visitors land on the shop, with an
-// "Admin Login" button top-right that sends store staff to /login.
-//
-// NOTE ON FIELD NAMES: I don't have your product schema (AddProduct.jsx /
-// backend model) in front of me, so the getters below try a couple of common
-// field-name variants (name/title, price/cost, stock/quantity, image/imageUrl).
-// If your product objects use different keys, just adjust the getters at the
-// top of this file — everything else works off them.
-
 import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import { fetchProducts } from "../features/products/productSlice";
-import { addToCart, toggleCart, selectCartCount } from "../features/cart/cartSlice";
+import { addItem, toggleCart, selectCartCount } from "../features/cart/cartSlice";
 import CartDrawer from "./CartDrawer";
 import "./ShowProducts.css";
+
+// This app runs separately from the admin app, so "Admin Login" has to be a
+// full URL, not a relative route. Point this at wherever your admin app is
+// actually served.
+const ADMIN_APP_URL = "http://localhost:3000/login";
 
 // If your backend serves uploaded images from a different path/port,
 // change this one line.
@@ -48,8 +41,8 @@ function getDescription(p) {
 
 export default function ShowProducts() {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
   const { items, loading, error } = useSelector((state) => state.products);
+  const cartItems = useSelector((state) => state.cart.items);
   const cartCount = useSelector(selectCartCount);
   const [query, setQuery] = useState("");
 
@@ -58,7 +51,17 @@ export default function ShowProducts() {
   }, [dispatch]);
 
   const handleAddToCart = (product) => {
-    dispatch(addToCart(product));
+    const stock = getStock(product) ?? 0;
+    const existing = cartItems.find((i) => i._id === product._id);
+    const currentQty = existing ? existing.qty : 0;
+
+    if (currentQty >= stock) {
+      toast.error(`Only ${stock} of ${getName(product)} available`);
+      return;
+    }
+
+    dispatch(addItem({ product, maxStock: stock }));
+    toast.success(`${getName(product)} added to cart`);
   };
 
   const filtered = useMemo(() => {
@@ -129,13 +132,9 @@ export default function ShowProducts() {
               {cartCount > 0 && <span className="cart-icon-btn__badge">{cartCount}</span>}
             </button>
 
-            <button
-              type="button"
-              className="admin-login-btn"
-              onClick={() => navigate("/login")}
-            >
+            {/* <a href={ADMIN_APP_URL} className="admin-login-btn">
               Admin Login
-            </button>
+            </a> */}
           </div>
         </div>
       </header>
@@ -182,6 +181,8 @@ export default function ShowProducts() {
             {filtered.map((p) => {
               const stock = getStock(p);
               const outOfStock = stock !== null && stock <= 0;
+              const cartQty = cartItems.find((i) => i._id === p._id)?.qty || 0;
+              const atMax = stock !== null && cartQty >= stock;
               const img = resolveImage(p);
               return (
                 <article
@@ -217,10 +218,14 @@ export default function ShowProducts() {
                     <button
                       type="button"
                       className="product-card__add-btn"
-                      disabled={outOfStock}
+                      disabled={outOfStock || atMax}
                       onClick={() => handleAddToCart(p)}
                     >
-                      {outOfStock ? "Out of stock" : "Add to Cart"}
+                      {outOfStock
+                        ? "Out of stock"
+                        : atMax
+                        ? "All in cart"
+                        : "Add to Cart"}
                     </button>
                   </div>
                 </article>
