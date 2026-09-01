@@ -2,10 +2,10 @@
 import axios from "axios";
 
 const ADMIN_API_URL =
-  process.env.REACT_APP_API_URL || "http://localhost:3001/api/admin/";
+  process.env.REACT_APP_API_URL || "/api/admin/";
 const PRODUCT_API_URL =
   process.env.REACT_APP_API_URL_PRODUCT ||
-  "http://localhost:3002/api/products/";
+  "/api/products/";
 
 function createInstance(baseURL) {
   const instance = axios.create({ baseURL });

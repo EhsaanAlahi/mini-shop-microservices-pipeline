@@ -18,28 +18,38 @@ jobs:
           - name: admin-panel
             context: ./admin
             image: minishop_admin
+            dockerfile: Dockerfile.k8s
             frontend: true
+            user: false
 
           - name: user
             context: ./user
             image: minishop_user
+            dockerfile: Dockerfile.k8s
             frontend: false
+            user: true
 
 
           - name: user-service
             context: ./services/user-service
             image: minishop_user_service
+            dockerfile: Dockerfile
             frontend: false
+            user: false
 
           - name: product-service
             context: ./services/product-service
             image: minishop_product_service
+            dockerfile: Dockerfile
             frontend: false
+            user: false
 
           - name: notification-service
             context: ./services/notification-service
             image: minishop_notification_service
+            dockerfile: Dockerfile
             frontend: false
+            user: false
 
     steps:
 
@@ -63,6 +73,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: ${{ matrix.service.context }}
+          file:  ${{ matrix.service.context }}/${{ matrix.service.dockerfile }}
           push: true
 
           tags: |
@@ -70,7 +81,7 @@ jobs:
 
           build-args: |
             REACT_APP_API_URL=${{ matrix.service.frontend && vars.REACT_APP_API_URL || '' }}
-            REACT_APP_API_URL_PRODUCT=${{ matrix.service.frontend && vars.REACT_APP_API_URL_PRODUCT || '' }}
+            REACT_APP_API_URL_PRODUCT=${{ (matrix.service.frontend || matrix.service.user) && vars.REACT_APP_API_URL_PRODUCT || '' }}
 
           cache-from: type=gha
           cache-to: type=gha,mode=max
